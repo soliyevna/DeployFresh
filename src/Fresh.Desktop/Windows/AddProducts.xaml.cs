@@ -1,0 +1,148 @@
+﻿using Fresh.DataAccess.Interfaces.Repositories;
+using Fresh.DataAccess.Repositories;
+using Fresh.Desktop.Pages;
+using Fresh.Domain.Entities;
+using Fresh.Service.Services.PageServices;
+using System;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+
+namespace Fresh.Desktop.Windows
+{
+    /// <summary>
+    /// Interaction logic for AddProducts.xaml
+    /// </summary>
+    public partial class AddProducts : Window
+    {
+        public AddProducts()
+        {
+            InitializeComponent();
+            func();
+
+
+        }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+            ProductsPage.chack = false;
+        }
+
+        private async void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+
+
+
+            if (ProductName.Text.Length > 0 && Price.Text.Length > 0 && double.Parse(Price.Text) > 0 && Unit.Text.Length > 0
+                && BarCode.Text.Length > 0 && Productdate.Text != null && Expiredate.Text != null && categoryname.Text.Length > 0)
+            {
+                if (DateTime.Parse(Productdate.Text) <= DateTime.Parse(Expiredate.Text))
+                {
+                    float value;
+                    if (float.TryParse(Price.Text, out value))
+                    {
+                        ICategoryRepository categoryRepository = new CategoryRepository();
+                        Category category = await categoryRepository.GetByName(categoryname.Text);
+                        Product product = new Product()
+                        {
+                            Name = ProductName.Text,
+                            CategoryId = category.Id,
+                            Price = float.Parse(Price.Text),
+                            Unit = Unit.Text,
+                            BarcodeName = BarCode.Text,
+                            ProductionDate = Productdate.Text,
+                            ExpireDate = Expiredate.Text,
+                            Value = 0,
+                        };
+                        ProductPage productsPage = new ProductPage();
+                        var result = await productsPage.AddProdact(product);
+                        if (result)
+                        {
+                            ProductsPage.chack = false;
+                            MessageBox.Show("Product succesfully created", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+                            this.Close();
+                        }
+                        else
+                        {
+                            MessageBox.Show("There was wrong with adding product", "Error", MessageBoxButton.OK, MessageBoxImage.Hand);
+                            ProductsPage.chack = true;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("Enter the price only numbers", "Error", MessageBoxButton.OK, MessageBoxImage.Hand);
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("The Expire date before than Product data ", "Error", MessageBoxButton.OK, MessageBoxImage.Hand);
+                }
+            }
+            else
+            {
+                MessageBox.Show($"Fill all of the fields needed.");
+            }
+
+           
+        }
+
+        public async void func()
+        {
+            CategoriyesPage categoriyesPage = new CategoriyesPage();
+            var raesalt = await categoriyesPage.GetCategories();
+            foreach (var c in raesalt)
+            {
+                categoryname.Items.Add(c.Name);
+            }
+        }
+        private async void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            CategoriyesPage categoriyesPage = new CategoriyesPage();
+            bool result = await categoriyesPage.AddCategories(categoryname.Text);
+            if (result)
+            {
+                ProductsPage.chack = false;
+                MessageBox.Show("Category succesfully created", "Success", MessageBoxButton.OK, MessageBoxImage.Information);
+            }
+            else
+            {
+                MessageBox.Show("There was wrong with adding Category", "Error", MessageBoxButton.OK, MessageBoxImage.Hand);
+                ProductsPage.chack = true;
+            }
+        }
+
+        private void Window_MouseDowns(object sender, MouseButtonEventArgs e)
+        {
+            if (e.LeftButton == MouseButtonState.Pressed)
+                DragMove();
+        }
+
+        private void ProductName_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
+
+        private void categoryname_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void ComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+        }
+
+        private void Price_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(Price.Text, @"^*[0-9\.]+$") && Price.Text.Length > 0)
+                Price.Text = Price.Text.Remove(Price.Text.Length - 1);
+        }
+
+        private void Barcode_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (!System.Text.RegularExpressions.Regex.IsMatch(BarCode.Text, @"^*[0-9\.]+$") && BarCode.Text.Length > 0)
+                BarCode.Text = BarCode.Text.Remove(BarCode.Text.Length - 1);
+        }
+    }
+}
